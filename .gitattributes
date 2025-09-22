@@ -1,0 +1,23 @@
+# Handle text files automatically
+* text=auto
+
+# Java files: use LF
+*.java text eol=lf
+
+# XML and configuration files: use LF
+*.xml text eol=lf
+*.md  text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.properties text eol=lf
+
+# Batch and shell scripts
+*.bat text eol=crlf
+*.sh  text eol=lf
+
+# Binary files
+*.jar binary
+*.class binary
+*.png binary
+*.jpg binary
+*.gif binary
