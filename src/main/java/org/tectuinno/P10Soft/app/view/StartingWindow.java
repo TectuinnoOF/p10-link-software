@@ -1,24 +1,68 @@
-package org.tectuinno.P10Soft.app.view;
+/*
+ * This file is part of P10-Soft.
+ *
+ * P10-Soft is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful
+ * as a companion tool for the Tectuinno P10-Link chip, enabling users
+ * to design, visualize and transmit frames to P10 LED panels in real time.
+ * However, WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * As a special exception, you may use this file as part of a free software
+ * library without restriction. Specifically, if other files instantiate
+ * templates or use macros or inline functions from this file, or you compile
+ * this file and link it with other files to produce an executable, this
+ * file does not by itself cause the resulting executable to be covered by
+ * the GNU General Public License. This exception does not however
+ * invalidate any other reasons why the executable file might be covered by
+ * the GNU General Public License.
+ *
+ * Copyright 2025 Tectuinno Team (https://github.com/tectuinno)
+ */
 
-import java.awt.EventQueue;
+package org.tectuinno.P10Soft.app.view;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+
+import org.tectuinno.P10Soft.app.view.components.CellPixelPanel;
+
 import java.awt.BorderLayout;
+import java.awt.Color;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 import java.awt.FlowLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import java.awt.Dimension;
+import javax.swing.JSplitPane;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
 
 public class StartingWindow extends JFrame {
 
 	private static final long serialVersionUID = 1L;
-	private JPanel contentPane;	
+	private JPanel contentPane;
 	private final JMenuBar menuBar = new JMenuBar();
 	private final JMenu jMenuArchivo = new JMenu("Archivo");
 	private final JMenuItem jMenuItemAbrir = new JMenuItem("Cargar diseño");
@@ -30,17 +74,26 @@ public class StartingWindow extends JFrame {
 	private final JSeparator separator = new JSeparator();
 	private final JMenuItem jMenuItemLimpiar = new JMenuItem("Limpiar tabla");
 	private final JPanel jPanelSuperiorBotones = new JPanel();
-	private final JPanel jPanelInferiorConsola = new JPanel();
 	private final JButton btnConvertir = new JButton("Convertir");
 	private final JButton btnEnviar = new JButton("Enviar");
 	private final JMenuItem jMenuItemEscanear = new JMenuItem("Escanear COM");
 	private final JComboBox<String> cmbDispositivosCOMDisponibles = new JComboBox<String>();
 	private final JButton btnEscanear = new JButton("Escanear dispositivos");
+	private final JSplitPane splitPaneTablaContenedor = new JSplitPane();
+	private final JPanel panelContenedorTablaBinaria = new JPanel();
+	private final JPanel panelGridLayOutTablaBinaria = new JPanel();
 
 	/**
 	 * Create the frame.
 	 */
 	public StartingWindow() {
+		setTitle("P10 Link Software");
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				setTableDividerLocationEvent();
+			}
+		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 700);
 		{
@@ -83,6 +136,7 @@ public class StartingWindow extends JFrame {
 		{
 			FlowLayout flowLayout = (FlowLayout) jPanelSuperiorBotones.getLayout();
 			flowLayout.setAlignment(FlowLayout.LEFT);
+
 			contentPane.add(jPanelSuperiorBotones, BorderLayout.NORTH);
 		}
 		{
@@ -99,9 +153,77 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(btnEscanear);
 		}
 		{
-			contentPane.add(jPanelInferiorConsola, BorderLayout.SOUTH);
+			splitPaneTablaContenedor.setOrientation(JSplitPane.VERTICAL_SPLIT);
+			this.splitPaneTablaContenedor.setDividerLocation(410);
+			contentPane.add(splitPaneTablaContenedor, BorderLayout.CENTER);
+		}
+		{
+			splitPaneTablaContenedor.setLeftComponent(panelContenedorTablaBinaria);
+		}
+		panelContenedorTablaBinaria.setLayout(new BorderLayout(0, 0));
+		{
+			panelContenedorTablaBinaria.add(panelGridLayOutTablaBinaria, BorderLayout.CENTER);
+		}
+		panelGridLayOutTablaBinaria.setLayout(new GridLayout(16, 32, 0, 0));
+
+		this.buildTable();
+
+	}
+
+	private void setTableDividerLocationEvent() {
+		this.splitPaneTablaContenedor.setDividerLocation(this.getHeight() - 310);
+	}
+
+	private void buildTable() {
+
+		try {			
+			if (this.panelGridLayOutTablaBinaria == null)
+				throw new Exception("El componente es null");
+
+			for (int i = 16; i > 0; i--) {
+				for (int j = 0; j < 32; j++) {
+					CellPixelPanel cellPanel = new CellPixelPanel("panel_" + i + "_" + j, new Color(255, 255, 204), new LineBorder(new Color(0, 0, 0)),i,j);
+					cellPanel.setOn(false);
+					cellPanel.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) { 
+							super.mouseClicked(e);
+							cellClickedEvent(cellPanel);
+						}
+					});
+					this.panelGridLayOutTablaBinaria.add(cellPanel);
+
+					// jpanelList.add(cellPanel);
+				}
+			}
+
+		} catch (Exception e) {
+
+			JOptionPane.showMessageDialog(this, "Ha ocurrido un error:" + e.getMessage(), "Error de UI",
+					JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+
 		}
 
+	}
+	
+	private void getBinaryTable() {
+		
+	}
+
+	private void cellClickedEvent(CellPixelPanel panel) {
+		
+		panel.setOn(!panel.isPixelOn());
+		
+		if(panel.isPixelOn()) {
+			panel.setBackground(new Color(0,204,0));
+			return;
+		}
+		
+		if(!panel.isPixelOn()) {
+			panel.setBackground(new Color(255, 255, 204));
+			return;
+		}
 	}
 
 }
