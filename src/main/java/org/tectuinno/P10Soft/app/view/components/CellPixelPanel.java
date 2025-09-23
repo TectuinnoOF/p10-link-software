@@ -57,9 +57,8 @@ public class CellPixelPanel extends JPanel {
 	 * @param column
 	 * @param row
 	 */
-	public CellPixelPanel(String name, Color background, Border border, int column, int row) {
-		super.setName(name);
-		super.setBackground(background);
+	public CellPixelPanel(String name, Border border, int column, int row) {
+		super.setName(name);		
 		super.setBorder(border);
 		this.column = column;
 		this.row = row;
@@ -71,6 +70,7 @@ public class CellPixelPanel extends JPanel {
 	
 	public void setOn(boolean isOn) {
 		this.isOn = isOn;
+		this.setBackgroundColorEvent();
 	}
 	
 	public boolean isPixelOn() {
@@ -95,6 +95,19 @@ public class CellPixelPanel extends JPanel {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	
+	private void setBackgroundColorEvent() {
+		
+		if(this.isOn) {
+			this.setBackground(new Color(102,204,0));
+			return;
+		}
+		
+		if(!this.isOn) {
+			this.setBackground(new Color(255,255,153));
+		}
+		
 	}
 	
 }

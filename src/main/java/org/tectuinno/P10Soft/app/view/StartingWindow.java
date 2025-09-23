@@ -58,6 +58,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class StartingWindow extends JFrame {
 
@@ -82,6 +84,8 @@ public class StartingWindow extends JFrame {
 	private final JSplitPane splitPaneTablaContenedor = new JSplitPane();
 	private final JPanel panelContenedorTablaBinaria = new JPanel();
 	private final JPanel panelGridLayOutTablaBinaria = new JPanel();
+	private boolean[][] binaryTable = new boolean[16][32];
+	private CellPixelPanel[][] cellsPixelPanels = new CellPixelPanel[16][32];
 
 	/**
 	 * Create the frame.
@@ -127,6 +131,11 @@ public class StartingWindow extends JFrame {
 			jMenuHerramientas.add(separator);
 		}
 		{
+			jMenuItemLimpiar.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					clearAllPixels();
+				}
+			});
 			jMenuHerramientas.add(jMenuItemLimpiar);
 		}
 		contentPane = new JPanel();
@@ -140,6 +149,11 @@ public class StartingWindow extends JFrame {
 			contentPane.add(jPanelSuperiorBotones, BorderLayout.NORTH);
 		}
 		{
+			btnConvertir.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					convertFrame();
+				}
+			});
 			jPanelSuperiorBotones.add(btnConvertir);
 		}
 		{
@@ -180,9 +194,9 @@ public class StartingWindow extends JFrame {
 			if (this.panelGridLayOutTablaBinaria == null)
 				throw new Exception("El componente es null");
 
-			for (int i = 16; i > 0; i--) {
+			for (int i = 0; i < 16; i++) {
 				for (int j = 0; j < 32; j++) {
-					CellPixelPanel cellPanel = new CellPixelPanel("panel_" + i + "_" + j, new Color(255, 255, 204), new LineBorder(new Color(0, 0, 0)),i,j);
+					CellPixelPanel cellPanel = new CellPixelPanel("panel_" + i + "_" + j, new LineBorder(new Color(0, 0, 0)),j,i);
 					cellPanel.setOn(false);
 					cellPanel.addMouseListener(new MouseAdapter() {
 						@Override
@@ -192,7 +206,10 @@ public class StartingWindow extends JFrame {
 						}
 					});
 					this.panelGridLayOutTablaBinaria.add(cellPanel);
-
+					
+					
+					this.binaryTable[i][j] = cellPanel.isPixelOn() ? true : false;
+					this.cellsPixelPanels[i][j] = cellPanel;
 					// jpanelList.add(cellPanel);
 				}
 			}
@@ -207,22 +224,46 @@ public class StartingWindow extends JFrame {
 
 	}
 	
-	private void getBinaryTable() {
-		
-	}
+	public boolean[][] getBinaryTable() {
+		return this.binaryTable;
+	}		
 
 	private void cellClickedEvent(CellPixelPanel panel) {
 		
 		panel.setOn(!panel.isPixelOn());
 		
-		if(panel.isPixelOn()) {
-			panel.setBackground(new Color(0,204,0));
+		if(panel.isPixelOn()) {		
+			this.binaryTable[panel.getRow()][panel.getColumn()] = true;
 			return;
 		}
 		
-		if(!panel.isPixelOn()) {
-			panel.setBackground(new Color(255, 255, 204));
+		if(!panel.isPixelOn()) {			
+			this.binaryTable[panel.getRow()][panel.getColumn()] = false;
 			return;
+		}
+	}
+	
+	private void convertFrame() {
+		
+		/*for(int i = 0 ; i < this.binaryTable.length; i++) {						
+			
+			for(int j = 0; j < this.binaryTable[i].length; j++) {
+				
+				System.out.print(" " + this.binaryTable[i][j]);
+				
+			}
+			
+			System.out.println();
+			
+		}*/
+		
+	}
+	
+	private void clearAllPixels() {
+		for(int i = 0; i < cellsPixelPanels.length; i++) {
+			for(int j = 0; j < cellsPixelPanels[i].length; j++) {
+				this.cellsPixelPanels[i][j].setOn(false);				
+			}
 		}
 	}
 
