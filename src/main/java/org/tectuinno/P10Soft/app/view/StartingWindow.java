@@ -35,6 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import org.tectuinno.P10Soft.app.core.FrameConverter;
+import org.tectuinno.P10Soft.app.io.SerialTransmitter;
 import org.tectuinno.P10Soft.app.view.components.CellPixelPanel;
 
 import java.awt.BorderLayout;
@@ -60,6 +62,8 @@ import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 public class StartingWindow extends JFrame {
 
@@ -86,6 +90,11 @@ public class StartingWindow extends JFrame {
 	private final JPanel panelGridLayOutTablaBinaria = new JPanel();
 	private boolean[][] binaryTable = new boolean[16][32];
 	private CellPixelPanel[][] cellsPixelPanels = new CellPixelPanel[16][32];
+	private String hexFrame;
+	private List<String> aviablePortsName;
+	private final JPanel panelResultConsole = new JPanel();
+	private final JScrollPane scrollPaneConsoleContainer = new JScrollPane();
+	private final JTextArea textAreaResultConsole = new JTextArea();
 
 	/**
 	 * Create the frame.
@@ -157,6 +166,11 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(btnConvertir);
 		}
 		{
+			btnEnviar.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					sendData();
+				}
+			});
 			jPanelSuperiorBotones.add(btnEnviar);
 		}
 		{
@@ -164,6 +178,11 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(cmbDispositivosCOMDisponibles);
 		}
 		{
+			btnEscanear.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					searchForComDevices();
+				}
+			});
 			jPanelSuperiorBotones.add(btnEscanear);
 		}
 		{
@@ -179,8 +198,22 @@ public class StartingWindow extends JFrame {
 			panelContenedorTablaBinaria.add(panelGridLayOutTablaBinaria, BorderLayout.CENTER);
 		}
 		panelGridLayOutTablaBinaria.setLayout(new GridLayout(16, 32, 0, 0));
+		{
+			splitPaneTablaContenedor.setRightComponent(panelResultConsole);
+		}
+		panelResultConsole.setLayout(new BorderLayout(0, 0));
+		{
+			panelResultConsole.add(scrollPaneConsoleContainer);
+		}
+		{
+			textAreaResultConsole.setForeground(new Color(0, 255, 0));
+			textAreaResultConsole.setBackground(new Color(0, 0, 0));
+			scrollPaneConsoleContainer.setViewportView(textAreaResultConsole);
+			this.setConsoleInitialText();
+		}
 
 		this.buildTable();
+		this.searchForComDevices();
 
 	}
 
@@ -245,26 +278,83 @@ public class StartingWindow extends JFrame {
 	
 	private void convertFrame() {
 		
-		/*for(int i = 0 ; i < this.binaryTable.length; i++) {						
+		try {
 			
-			for(int j = 0; j < this.binaryTable[i].length; j++) {
-				
-				System.out.print(" " + this.binaryTable[i][j]);
-				
-			}
+			this.writteResultInConsole("Iniciando decodificación...");
+			this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
 			
-			System.out.println();
+			this.writteResultInConsole("Trama obtenida");
+			this.writteResultInConsole(hexFrame);
 			
-		}*/
+		}catch (Exception e) {
+			
+			this.writteResultInConsole("Ha ocurrido un error: " + e.getMessage());
+			e.printStackTrace(System.err);
+			
+		}
 		
 	}
 	
 	private void clearAllPixels() {
 		for(int i = 0; i < cellsPixelPanels.length; i++) {
 			for(int j = 0; j < cellsPixelPanels[i].length; j++) {
-				this.cellsPixelPanels[i][j].setOn(false);				
+				this.cellsPixelPanels[i][j].setOn(false);
+				this.binaryTable[i][j] = false;
 			}
 		}
+	}
+	
+	private void setConsoleInitialText() {
+		
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("==========================================================\n");
+		sb.append("                 Result Console Terminal                 \n");
+		sb.append("==========================================================\n");
+		
+		this.textAreaResultConsole.setText(sb.toString());
+		
+	}
+	
+	private void writteResultInConsole(String msg) {
+		this.textAreaResultConsole.append("\n>>");
+		this.textAreaResultConsole.append(msg);
+	}
+	
+	private void searchForComDevices() {
+		this.cmbDispositivosCOMDisponibles.removeAllItems();
+		this.aviablePortsName = SerialTransmitter.listAviablePorts();
+		
+		if(aviablePortsName.size() <= 0) {
+			this.writteResultInConsole("No se detectaron dispositivos conectados...");
+			return;
+		}
+		
+		for(String s : aviablePortsName) {
+			this.cmbDispositivosCOMDisponibles.addItem(s);
+		}				
+	}
+	
+	private void sendData() {
+		
+		if(this.aviablePortsName == null || this.aviablePortsName.size() < 0) {
+			this.writteResultInConsole("No se detectaron dispositivos conectados");
+			return;
+		}
+		
+		if(this.hexFrame == null || this.hexFrame.length() < 256) {
+			this.writteResultInConsole("Los datos son Null o incompletos");
+			return;
+		}
+		
+		SerialTransmitter tx = new SerialTransmitter();
+		if(tx.openPort(this.cmbDispositivosCOMDisponibles.getSelectedItem().toString())) {
+			this.writteResultInConsole("Puerto abierto: " + this.cmbDispositivosCOMDisponibles.getSelectedItem());
+			boolean success = tx.sendHexFrame(this.hexFrame);
+			this.writteResultInConsole("Envio: " + (success ? "OK" : "Fallido"));
+			tx.closePort();
+		}
+		
 	}
 
 }
