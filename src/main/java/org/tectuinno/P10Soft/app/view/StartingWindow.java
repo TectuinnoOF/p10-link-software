@@ -57,6 +57,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
@@ -278,10 +279,27 @@ public class StartingWindow extends JFrame {
 	
 	private void convertFrame() {
 		
+		for(int i = 0; i < this.binaryTable.length; i++) {
+			for(int j = 0; j < this.binaryTable[i].length ; j++) {
+				System.out.print(this.binaryTable[i][j]? 1 + " " : 0 + " ");
+			}
+			System.out.println();
+		}				
+		
 		try {
 			
 			this.writteResultInConsole("Iniciando decodificación...");
-			this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
+			//this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
+			
+			String[][] hexMatrix = FrameConverter.convertBinaryMatrixToHex(binaryTable);
+			for(int i = 0; i< hexMatrix.length; i++) {
+				for(int j = 0; j < hexMatrix[i].length; j++) {
+					System.out.print(" " + hexMatrix[i][j]);
+				}
+				System.out.println();
+			}
+			
+			this.hexFrame = FrameConverter.getRamArrayFrame(hexMatrix);
 			
 			this.writteResultInConsole("Trama obtenida");
 			this.writteResultInConsole(hexFrame);
@@ -342,7 +360,7 @@ public class StartingWindow extends JFrame {
 			return;
 		}
 		
-		if(this.hexFrame == null || this.hexFrame.length() < 256) {
+		if(this.hexFrame == null || this.hexFrame.length() < 128) {
 			this.writteResultInConsole("Los datos son Null o incompletos");
 			return;
 		}
