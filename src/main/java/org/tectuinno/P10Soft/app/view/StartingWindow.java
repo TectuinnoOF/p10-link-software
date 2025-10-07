@@ -66,6 +66,55 @@ import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+/**
+ * Ventana principal del sistema que actúa como punto de entrada visual para el usuario.
+ * <p>
+ * La clase {@code StartingWindow} extiende {@link JFrame} y representa la
+ * ventana principal de la aplicación. Su propósito es inicializar y mostrar
+ * la interfaz base desde la cual el usuario puede acceder al resto de las
+ * funcionalidades del sistema.
+ * </p>
+ *
+ * <h2>Características principales</h2>
+ * <ul>
+ *   <li>Inicializa los componentes gráficos (botones, menús, paneles, etc.).</li>
+ *   <li>Establece las propiedades visuales de la ventana (tamaño, título, íconos, comportamiento de cierre, etc.).</li>
+ *   <li>Actúa como contenedor principal de otras vistas o paneles secundarios.</li>
+ *   <li>Puede incluir listeners para manejar eventos de interacción del usuario.</li>
+ * </ul>
+ *
+ *
+ * <h2>Ciclo de vida</h2>
+ * <table border="1">
+ *   <tr>
+ *     <th>Etapa</th>
+ *     <th>Descripción</th>
+ *   </tr>
+ *   <tr>
+ *     <td>Construcción</td>
+ *     <td>Se instancian los componentes de la interfaz y se definen las propiedades básicas.</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Inicialización</td>
+ *     <td>Se configuran los listeners y la lógica de los botones o menús.</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Ejecución</td>
+ *     <td>La ventana se hace visible al usuario y queda en espera de eventos.</td>
+ *   </tr>
+ * </table>
+ *
+ * <h2>Notas de implementación</h2>
+ * <ul>
+ *   <li>Se recomienda mantener la lógica de negocio fuera de esta clase, limitándola a control visual.</li>
+ *   <li>Usar el patrón MVC para desacoplar vista, modelo y controlador.</li>
+ *   <li>Si se requiere cambiar el contenido dinámicamente, usar un {@link javax.swing.JPanel} central con {@link java.awt.CardLayout}.</li>
+ * </ul>
+ *
+ * @author Pablo Gomez Perez
+ * @version 1.0
+ * @since 2025-10
+ */
 public class StartingWindow extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -217,11 +266,108 @@ public class StartingWindow extends JFrame {
 		this.searchForComDevices();
 
 	}
-
+	
+	/**
+     * Ajusta dinámicamente la posición del divisor del componente {@link JSplitPane}
+     * que contiene la tabla principal dentro de la ventana.
+     * <p>
+     * Este método reposiciona el divisor del panel dividido
+     * ({@code splitPaneTablaContenedor}) según la altura actual de la ventana,
+     * garantizando que el área superior conserve una proporción fija y el área
+     * inferior (por ejemplo, una tabla o panel de detalle) mantenga
+     * aproximadamente 310 píxeles de altura.
+     * </p>
+     *
+     * <h2>Propósito</h2>
+     * <ul>
+     *   <li>Evitar que el divisor del {@code JSplitPane} quede desalineado cuando la ventana cambia de tamaño.</li>
+     *   <li>Mantener una distribución visual coherente entre los paneles superior e inferior.</li>
+     *   <li>Adaptar la interfaz a diferentes resoluciones o tamaños de pantalla.</li>
+     * </ul>
+     *
+     * <h2>Funcionamiento</h2>
+     * <p>
+     * La posición del divisor se calcula restando {@code 310} píxeles a la altura total
+     * de la ventana, de forma que la tabla inferior mantenga ese espacio reservado.
+     * </p>
+     *
+     * <h2>Notas</h2>
+     * <ul>
+     *   <li>Debe ser llamado después de que los componentes visuales han sido inicializados.</li>
+     *   <li>En entornos de redimensionamiento dinámico, se recomienda invocarlo dentro de un listener de eventos {@code componentResized}.</li>
+     * </ul>
+     *
+     * @see javax.swing.JSplitPane#setDividerLocation(int)
+     * @since 1.0
+     */
 	private void setTableDividerLocationEvent() {
 		this.splitPaneTablaContenedor.setDividerLocation(this.getHeight() - 310);
 	}
-
+	
+	/**
+     * Construye dinámicamente la tabla de celdas binarias representada visualmente
+     * en la interfaz de usuario, inicializando la matriz de paneles que conforman
+     * la cuadrícula principal.
+     * <p>
+     * Este método crea una cuadrícula de 16 filas por 32 columnas, donde cada celda
+     * es un componente {@link CellPixelPanel} que simula un píxel encendido o apagado.
+     * Además, asigna listeners de clic a cada celda para permitir la interacción
+     * directa del usuario y mantener sincronizado el modelo lógico
+     * ({@code binaryTable}) con la vista ({@code panelGridLayOutTablaBinaria}).
+     * </p>
+     *
+     * <h2>Flujo de ejecución</h2>
+     * <ol>
+     *   <li>Verifica que {@code panelGridLayOutTablaBinaria} no sea {@code null}.</li>
+     *   <li>Itera sobre las 16 filas y 32 columnas de la cuadrícula.</li>
+     *   <li>Para cada posición:
+     *     <ul>
+     *       <li>Se instancia un nuevo {@link CellPixelPanel} identificado como <code>panel_i_j</code>.</li>
+     *       <li>Se define un borde negro mediante {@link LineBorder}.</li>
+     *       <li>Se inicializa el estado del píxel como apagado (<code>false</code>).</li>
+     *       <li>Se agrega un {@link MouseListener} que invoca {@link #cellClickedEvent(CellPixelPanel)} al hacer clic.</li>
+     *       <li>El panel es añadido al contenedor principal {@code panelGridLayOutTablaBinaria}.</li>
+     *       <li>Se actualizan las matrices lógicas {@code binaryTable} y {@code cellsPixelPanels}.</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     *
+     * <h2>Estructuras actualizadas</h2>
+     * <table border="1" cellpadding="4" cellspacing="0">
+     *   <tr>
+     *     <th>Variable</th>
+     *     <th>Tipo</th>
+     *     <th>Descripción</th>
+     *   </tr>
+     *   <tr>
+     *     <td>{@code binaryTable}</td>
+     *     <td>{@code boolean[16][32]}</td>
+     *     <td>Almacena el estado lógico (encendido/apagado) de cada píxel de la cuadrícula.</td>
+     *   </tr>
+     *   <tr>
+     *     <td>{@code cellsPixelPanels}</td>
+     *     <td>{@code CellPixelPanel[16][32]}</td>
+     *     <td>Contiene las referencias visuales de cada celda de la tabla.</td>
+     *   </tr>
+     * </table>
+     *
+     * <h2>Gestión de errores</h2>
+     * <ul>
+     *   <li>Si {@code panelGridLayOutTablaBinaria} es {@code null}, se lanza una excepción y se muestra un cuadro de diálogo con el mensaje de error.</li>
+     *   <li>El error también se imprime en la salida estándar mediante {@code e.printStackTrace()}.</li>
+     * </ul>
+     *
+     * <h2>Ejemplo de uso</h2>
+     * <pre>{@code
+     * // Inicializar la cuadrícula binaria en la ventana principal
+     * buildTable();
+     * }</pre>
+     *
+     * @throws RuntimeException si el contenedor de la tabla binaria no está inicializado.
+     * @see CellPixelPanel
+     * @see #cellClickedEvent(CellPixelPanel)
+     * @since 1.0
+     */
 	private void buildTable() {
 
 		try {			

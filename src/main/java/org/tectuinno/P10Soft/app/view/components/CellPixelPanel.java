@@ -35,6 +35,58 @@ import java.awt.Color;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+/**
+ * Representa una celda interactiva dentro de la cuadrícula binaria principal de la interfaz.
+ * <p>
+ * La clase {@code CellPixelPanel} extiende {@link JPanel} y actúa como un componente
+ * visual individual (un "píxel") capaz de cambiar su estado entre encendido y apagado.
+ * Cada instancia mantiene un identificador único, coordenadas dentro de la cuadrícula,
+ * un borde personalizado, y un color de fondo dinámico que refleja su estado lógico.
+ * </p>
+ *
+ * <h2>Propósito</h2>
+ * <ul>
+ *   <li>Simular un píxel binario dentro de una matriz de 16×32 posiciones.</li>
+ *   <li>Permitir la interacción directa con el usuario mediante clics.</li>
+ *   <li>Actualizar la representación visual y lógica del sistema de dibujo binario.</li>
+ * </ul>
+ *
+ * <h2>Comportamiento visual</h2>
+ * <ul>
+ *   <li>Cuando el píxel está encendido, su fondo se pinta de un color activo (por defecto, negro o configurado).</li>
+ *   <li>Cuando está apagado, el fondo se muestra con el color base o transparente.</li>
+ *   <li>El borde exterior se define mediante {@link LineBorder} para una separación visual clara.</li>
+ * </ul>
+ *
+ * <h2>Interacción y eventos</h2>
+ * <p>
+ * Cada celda puede escuchar eventos de ratón mediante {@link MouseListener}.
+ * En la ventana principal ({@link StartingWindow}), el método
+ * {@link StartingWindow#cellClickedEvent(CellPixelPanel)} se invoca al detectar un clic,
+ * alternando su estado binario y actualizando la tabla correspondiente.
+ * </p>
+ *
+ * <h2>Ejemplo de uso</h2>
+ * <pre>{@code
+ * CellPixelPanel pixel = new CellPixelPanel("panel_3_5", new LineBorder(Color.BLACK), 5, 3);
+ * pixel.setOn(true);   // Encender el píxel
+ * parentPanel.add(pixel);
+ * }</pre>
+ *
+ * <h2>Consideraciones</h2>
+ * <ul>
+ *   <li>Debe integrarse dentro de un contenedor con {@code GridLayout(16, 32)} para alinear correctamente la cuadrícula.</li>
+ *   <li>No debe manejar directamente la lógica de red o conversión binaria; su responsabilidad es puramente visual y de interacción local.</li>
+ *   <li>El color de encendido/apagado puede personalizarse mediante métodos setter si se extiende esta clase.</li>
+ * </ul>
+ *
+ * @author Pablo Gomez Perez
+ * @version 1.0
+ * @since 2025-10
+ * @see JPanel
+ * @see StartingWindow
+ * @see java.awt.event.MouseListener
+ */
 public class CellPixelPanel extends JPanel {
 
 	/**
