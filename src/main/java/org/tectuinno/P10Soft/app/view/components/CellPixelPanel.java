@@ -120,27 +120,74 @@ public class CellPixelPanel extends JPanel {
 		super();
 	}
 	
+	/**
+	 * Cambia el estado lógico del píxel (encendido/apagado) y actualiza el color
+	 * de fondo de la celda en la interfaz.
+	 * <p>
+	 * Si el nuevo estado es {@code true}, la celda se colorea en verde
+	 * ({@code RGB(102, 204, 0)}). En caso contrario, se colorea en amarillo claro
+	 * ({@code RGB(255, 255, 153)}).
+	 * </p>
+	 *
+	 * @param isOn nuevo estado del píxel:
+	 *             <ul>
+	 *               <li>{@code true} → encendido (verde)</li>
+	 *               <li>{@code false} → apagado (amarillo claro)</li>
+	 *             </ul>
+	 * @see #setBackgroundColorEvent()
+	 * @since 1.0
+	 */
 	public void setOn(boolean isOn) {
 		this.isOn = isOn;
 		this.setBackgroundColorEvent();
 	}
 	
+	/**
+	 * Retorna el estado lógico actual del píxel.
+	 *
+	 * @return {@code true} si la celda está encendida, {@code false} si está apagada.
+	 * @since 1.0
+	 */
 	public boolean isPixelOn() {
 		return this.isOn;
 	}
 
+	/**
+	 * Obtiene el índice de columna de la celda dentro de la cuadrícula principal.
+	 *
+	 * @return índice de columna.
+	 * @since 1.0
+	 */
 	public int getColumn() {
 		return column;
 	}
-
+	
+	/**
+	 * Define el índice de columna de la celda.
+	 *
+	 * @param column nuevo valor para la columna.
+	 * @since 1.0
+	 */
 	public void setColumn(int column) {
 		this.column = column;
 	}
-
+	
+	/**
+	 * Obtiene el índice de fila de la celda dentro de la cuadrícula principal.
+	 *
+	 * @return índice de fila.
+	 * @since 1.0
+	 */
 	public int getRow() {
 		return row;
 	}
-
+	
+	/**
+	 * Define el índice de fila de la celda dentro de la cuadrícula principal.
+	 *
+	 * @param row nuevo valor para la fila.
+	 * @since 1.0
+	 */
 	public void setRow(int row) {
 		this.row = row;
 	}
@@ -149,6 +196,21 @@ public class CellPixelPanel extends JPanel {
 		return serialVersionUID;
 	}
 	
+	/**
+	 * Actualiza el color de fondo del panel según su estado lógico actual.
+	 * <p>
+	 * Este método es interno y es invocado automáticamente por {@link #setOn(boolean)}.
+	 * </p>
+	 *
+	 * <h3>Colores aplicados</h3>
+	 * <ul>
+	 *   <li>Encendido → Verde {@code (102, 204, 0)}</li>
+	 *   <li>Apagado → Amarillo claro {@code (255, 255, 153)}</li>
+	 * </ul>
+	 *
+	 * @see #setOn(boolean)
+	 * @since 1.0
+	 */
 	private void setBackgroundColorEvent() {
 		
 		if(this.isOn) {

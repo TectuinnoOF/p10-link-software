@@ -404,6 +404,60 @@ public class StartingWindow extends JFrame {
 
 	}
 	
+	/**
+     * Devuelve la representación lógica completa de la tabla binaria mostrada
+     * en la interfaz gráfica del editor de píxeles.
+     * <p>
+     * La matriz resultante es de tipo {@code boolean[16][32]} y refleja el
+     * estado actual (encendido/apagado) de cada celda {@link CellPixelPanel}
+     * dentro de la cuadrícula gestionada por {@code panelGridLayOutTablaBinaria}.
+     * Cada posición de la matriz corresponde a la combinación de fila y columna
+     * de una celda en la vista.
+     * </p>
+     *
+     * <h2>Estructura del retorno</h2>
+     * <table border="1" cellpadding="4" cellspacing="0">
+     *   <tr>
+     *     <th>Índice</th>
+     *     <th>Tipo</th>
+     *     <th>Descripción</th>
+     *   </tr>
+     *   <tr>
+     *     <td>{@code [i][j]}</td>
+     *     <td>{@code boolean}</td>
+     *     <td>
+     *       Estado lógico del píxel en la fila <code>i</code> y columna <code>j</code>.<br>
+     *       <ul>
+     *         <li>{@code true} → píxel encendido (celda verde)</li>
+     *         <li>{@code false} → píxel apagado (celda amarilla)</li>
+     *       </ul>
+     *     </td>
+     *   </tr>
+     * </table>
+     *
+     * <h2>Uso típico</h2>
+     * <pre>{@code
+     * // Obtener el estado binario actual de la cuadrícula
+     * boolean[][] estadoActual = getBinaryTable();
+     *
+     * // Acceder al estado de la celda en fila 5, columna 10
+     * boolean pixelEncendido = estadoActual[5][10];
+     * }</pre>
+     *
+     * <h2>Contexto de uso</h2>
+     * Este método se utiliza comúnmente para:
+     * <ul>
+     *   <li>Exportar o serializar el patrón binario diseñado por el usuario.</li>
+     *   <li>Transmitir el estado de la cuadrícula a un microcontrolador Tectuino.</li>
+     *   <li>Actualizar vistas externas o buffers lógicos dentro del IDE.</li>
+     * </ul>
+     *
+     * @return una matriz bidimensional de tipo {@code boolean[16][32]} que representa
+     *         el estado lógico completo de la cuadrícula binaria.
+     * @see CellPixelPanel
+     * @see #buildTable()
+     * @since 1.0
+     */
 	public boolean[][] getBinaryTable() {
 		return this.binaryTable;
 	}		
@@ -423,6 +477,81 @@ public class StartingWindow extends JFrame {
 		}
 	}
 	
+	/**
+     * Convierte la matriz binaria actual representada por {@code binaryTable}
+     * en su equivalente hexadecimal y la imprime en la consola del IDE.
+     * <p>
+     * Este método procesa el contenido lógico de la cuadrícula visual
+     * compuesta por instancias de {@link CellPixelPanel}, generando una
+     * representación hexadecimal estructurada para su posterior uso o
+     * transmisión a un microcontrolador Tectuino.
+     * </p>
+     *
+     * <h2>Flujo de ejecución</h2>
+     * <ol>
+     *   <li>Recorre e imprime la matriz binaria actual en formato textual
+     *       (0 y 1) en la salida estándar.</li>
+     *   <li>Registra en la consola del IDE el inicio del proceso de decodificación.</li>
+     *   <li>Invoca {@link FrameConverter#convertBinaryMatrixToHex(boolean[][])}
+     *       para generar una matriz equivalente en formato hexadecimal.</li>
+     *   <li>Imprime la matriz hexadecimal resultante en la salida estándar.</li>
+     *   <li>Convierte la matriz hexadecimal en una trama final utilizando
+     *       {@link FrameConverter#getRamArrayFrame(String[][])}.</li>
+     *   <li>Guarda el resultado en {@code hexFrame} y lo muestra en la consola del IDE.</li>
+     * </ol>
+     *
+     * <h2>Estructuras procesadas</h2>
+     * <table border="1" cellpadding="4" cellspacing="0">
+     *   <tr><th>Variable</th><th>Tipo</th><th>Descripción</th></tr>
+     *   <tr>
+     *     <td>{@code binaryTable}</td>
+     *     <td>{@code boolean[16][32]}</td>
+     *     <td>Matriz que representa el estado lógico (1/0) de cada píxel.</td>
+     *   </tr>
+     *   <tr>
+     *     <td>{@code hexMatrix}</td>
+     *     <td>{@code String[filas][columnas]}</td>
+     *     <td>Matriz hexadecimal generada a partir de la conversión binaria.</td>
+     *   </tr>
+     *   <tr>
+     *     <td>{@code hexFrame}</td>
+     *     <td>{@code String}</td>
+     *     <td>Cadena resultante con la trama final en formato hexadecimal.</td>
+     *   </tr>
+     * </table>
+     *
+     * <h2>Gestión de errores</h2>
+     * <ul>
+     *   <li>Si ocurre una excepción durante el proceso de conversión o decodificación,
+     *       se captura y se imprime en la consola de error estándar.</li>
+     *   <li>Además, se registra un mensaje de error descriptivo en la consola del IDE
+     *       mediante {@code writteResultInConsole()}.</li>
+     * </ul>
+     *
+     * <h2>Ejemplo de uso</h2>
+     * <pre>{@code
+     * // Generar la trama hexadecimal actual de la cuadrícula binaria
+     * convertFrame();
+     * 
+     * // Resultado visible en la consola:
+     * // - Representación binaria 16x32
+     * // - Matriz hexadecimal
+     * // - Trama completa codificada
+     * }</pre>
+     *
+     * <h2>Dependencias</h2>
+     * <ul>
+     *   <li>{@link FrameConverter} - para la conversión binario→hexadecimal y la generación de tramas.</li>
+     *   <li>{@link #writteResultInConsole(String)} - para mostrar resultados en la consola del IDE.</li>
+     *   <li>{@link #binaryTable} - fuente principal de datos binarios.</li>
+     * </ul>
+     *
+     * @throws RuntimeException si ocurre un error durante el proceso de conversión.
+     * @see FrameConverter#convertBinaryMatrixToHex(boolean[][])
+     * @see FrameConverter#getRamArrayFrame(String[][])
+     * @see #buildTable()
+     * @since 1.0
+     */
 	private void convertFrame() {
 		
 		for(int i = 0; i < this.binaryTable.length; i++) {
