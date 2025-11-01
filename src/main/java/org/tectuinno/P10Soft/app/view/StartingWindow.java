@@ -33,9 +33,6 @@ package org.tectuinno.P10Soft.app.view;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-
-import org.tectuinno.P10Soft.app.core.FrameConverter;
 import org.tectuinno.P10Soft.app.io.SerialTransmitter;
 import org.tectuinno.P10Soft.app.view.components.BinaryTablePixelPanelContainer;
 import org.tectuinno.P10Soft.app.view.components.CellPixelPanel;
@@ -55,13 +52,7 @@ import java.awt.Dimension;
 import javax.swing.JSplitPane;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
@@ -233,6 +224,11 @@ public class StartingWindow extends JFrame {
 			jMenuFrame.add(jMenuItemCerrarFrame);
 		}
 		{
+			jMenuItemCopiarFrameActual.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					duplicateCurrentFrame();
+				}
+			});
 			jMenuFrame.add(jMenuItemCopiarFrameActual);
 		}
 		contentPane = new JPanel();
@@ -288,9 +284,17 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(btnNuevoFrame);
 		}
 		{
+			this.btnDuplicarFrameActual.setEnabled(false);
+			btnDuplicarFrameActual.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					duplicateCurrentFrame();
+				}
+			});
 			jPanelSuperiorBotones.add(btnDuplicarFrameActual);
 		}
 		{
+			// If there is any tab open, the button will be off
+			this.btnCerrarFrame.setEnabled(false);				
 			btnCerrarFrame.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					closeCurrentTab();
@@ -432,103 +436,45 @@ public class StartingWindow extends JFrame {
 	}		
 	
 	/**
-     * Convierte la matriz binaria actual representada por {@code binaryTable}
-     * en su equivalente hexadecimal y la imprime en la consola del IDE.
+     * Convierte el frame binario actualmente activo en la pestaña seleccionada
+     * a su representación hexadecimal, delegando la conversión al contenedor
+     * {@link BinaryTablePixelPanelContainer}.
      * <p>
-     * Este método procesa el contenido lógico de la cuadrícula visual
-     * compuesta por instancias de {@link CellPixelPanel}, generando una
-     * representación hexadecimal estructurada para su posterior uso o
-     * transmisión a un microcontrolador Tectuino.
+     * Obtiene el componente activo del panel con pestañas, ejecuta su conversión
+     * mediante {@link BinaryTablePixelPanelContainer#convertCurrentFrame()} y
+     * almacena el resultado en {@code hexFrame}. Finalmente, muestra la trama
+     * generada en la consola del IDE.
      * </p>
      *
-     * <h2>Flujo de ejecución</h2>
+     * <h2>Flujo resumido</h2>
      * <ol>
-     *   <li>Recorre e imprime la matriz binaria actual en formato textual
-     *       (0 y 1) en la salida estándar.</li>
-     *   <li>Registra en la consola del IDE el inicio del proceso de decodificación.</li>
-     *   <li>Invoca {@link FrameConverter#convertBinaryMatrixToHex(boolean[][])}
-     *       para generar una matriz equivalente en formato hexadecimal.</li>
-     *   <li>Imprime la matriz hexadecimal resultante en la salida estándar.</li>
-     *   <li>Convierte la matriz hexadecimal en una trama final utilizando
-     *       {@link FrameConverter#getRamArrayFrame(String[][])}.</li>
-     *   <li>Guarda el resultado en {@code hexFrame} y lo muestra en la consola del IDE.</li>
+     *   <li>Obtiene el contenedor actualmente seleccionado.</li>
+     *   <li>Invoca su método {@code convertCurrentFrame()}.</li>
+     *   <li>Recupera el resultado mediante {@code getHexFrame()}.</li>
+     *   <li>Registra los mensajes de proceso y resultado en la consola.</li>
      * </ol>
-     *
-     * <h2>Estructuras procesadas</h2>
-     * <table border="1" cellpadding="4" cellspacing="0">
-     *   <tr><th>Variable</th><th>Tipo</th><th>Descripción</th></tr>
-     *   <tr>
-     *     <td>{@code binaryTable}</td>
-     *     <td>{@code boolean[16][32]}</td>
-     *     <td>Matriz que representa el estado lógico (1/0) de cada píxel.</td>
-     *   </tr>
-     *   <tr>
-     *     <td>{@code hexMatrix}</td>
-     *     <td>{@code String[filas][columnas]}</td>
-     *     <td>Matriz hexadecimal generada a partir de la conversión binaria.</td>
-     *   </tr>
-     *   <tr>
-     *     <td>{@code hexFrame}</td>
-     *     <td>{@code String}</td>
-     *     <td>Cadena resultante con la trama final en formato hexadecimal.</td>
-     *   </tr>
-     * </table>
      *
      * <h2>Gestión de errores</h2>
      * <ul>
-     *   <li>Si ocurre una excepción durante el proceso de conversión o decodificación,
-     *       se captura y se imprime en la consola de error estándar.</li>
-     *   <li>Además, se registra un mensaje de error descriptivo en la consola del IDE
-     *       mediante {@code writteResultInConsole()}.</li>
+     *   <li>Captura cualquier excepción y la muestra en la consola del IDE.</li>
+     *   <li>Imprime el error también en la salida de error estándar.</li>
      * </ul>
      *
-     * <h2>Ejemplo de uso</h2>
-     * <pre>{@code
-     * // Generar la trama hexadecimal actual de la cuadrícula binaria
-     * convertFrame();
-     * 
-     * // Resultado visible en la consola:
-     * // - Representación binaria 16x32
-     * // - Matriz hexadecimal
-     * // - Trama completa codificada
-     * }</pre>
-     *
-     * <h2>Dependencias</h2>
-     * <ul>
-     *   <li>{@link FrameConverter} - para la conversión binario→hexadecimal y la generación de tramas.</li>
-     *   <li>{@link #writteResultInConsole(String)} - para mostrar resultados en la consola del IDE.</li>
-     *   <li>{@link #binaryTable} - fuente principal de datos binarios.</li>
-     * </ul>
-     *
-     * @throws RuntimeException si ocurre un error durante el proceso de conversión.
-     * @see FrameConverter#convertBinaryMatrixToHex(boolean[][])
-     * @see FrameConverter#getRamArrayFrame(String[][])
-     * @see #buildTable()
+     * @throws RuntimeException si ocurre un error durante la conversión.
+     * @see BinaryTablePixelPanelContainer#convertCurrentFrame()
+     * @see BinaryTablePixelPanelContainer#getHexFrame()
      * @since 1.0
      */
-	private void convertFrame() {
-		
-		for(int i = 0; i < this.binaryTable.length; i++) {
-			for(int j = 0; j < this.binaryTable[i].length ; j++) {
-				System.out.print(this.binaryTable[i][j]? 1 + " " : 0 + " ");
-			}
-			System.out.println();
-		}				
+	private void convertFrame() {				
 		
 		try {
 			
 			this.writteResultInConsole("Iniciando decodificación...");
 			//this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
 			
-			String[][] hexMatrix = FrameConverter.convertBinaryMatrixToHex(binaryTable);
-			for(int i = 0; i< hexMatrix.length; i++) {
-				for(int j = 0; j < hexMatrix[i].length; j++) {
-					System.out.print(" " + hexMatrix[i][j]);
-				}
-				System.out.println();
-			}
-			
-			this.hexFrame = FrameConverter.getRamArrayFrame(hexMatrix);
+			BinaryTablePixelPanelContainer currentPixelContainer = (BinaryTablePixelPanelContainer)this.tabbedPaneContainer.getSelectedComponent();
+			currentPixelContainer.convertCurrentFrame();
+			this.hexFrame = currentPixelContainer.getHexFrame();
 			
 			this.writteResultInConsole("Trama obtenida");
 			this.writteResultInConsole(hexFrame);
@@ -542,13 +488,22 @@ public class StartingWindow extends JFrame {
 		
 	}
 	
+	/**
+     * Limpia todos los píxeles del frame actualmente activo en la pestaña seleccionada.
+     * <p>
+     * Obtiene el componente {@link BinaryTablePixelPanelContainer} activo dentro
+     * del panel con pestañas y ejecuta su método {@link BinaryTablePixelPanelContainer#clearCurrentPixelTable()},
+     * restableciendo tanto la vista como la matriz lógica del frame.
+     * </p>
+     *
+     * @see BinaryTablePixelPanelContainer#clearCurrentPixelTable()
+     * @since 1.0
+     */
 	private void clearAllPixels() {
-		for(int i = 0; i < cellsPixelPanels.length; i++) {
-			for(int j = 0; j < cellsPixelPanels[i].length; j++) {
-				this.cellsPixelPanels[i][j].setOn(false);
-				this.binaryTable[i][j] = false;
-			}
-		}
+		
+		BinaryTablePixelPanelContainer currentBinaryTablePixelPanelContainer = (BinaryTablePixelPanelContainer)this.tabbedPaneContainer.getSelectedComponent();
+		currentBinaryTablePixelPanelContainer.clearCurrentPixelTable();
+		
 	}
 	
 	private void setConsoleInitialText() {
@@ -618,8 +573,12 @@ public class StartingWindow extends JFrame {
 		
 		int result = JOptionPane.showConfirmDialog(this, "Estas seguro de cerrar el frame? el diseño se perderá.", "Cerrar frame?", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);		
 		if(result == JOptionPane.NO_OPTION) return;
+		oppenedFrames--;
 		
 		this.tabbedPaneContainer.remove(this.tabbedPaneContainer.getSelectedIndex());
+		
+		this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
+		this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
 		
 	}
 	
@@ -638,17 +597,40 @@ public class StartingWindow extends JFrame {
      */
 	private void openNewBinaryPixelTable() {
 		
-		try {
+		try {						
 			
 			BinaryTablePixelPanelContainer container = new BinaryTablePixelPanelContainer();
-			this.tabbedPaneContainer.addTab("Frame: " + oppenedFrames + 1, container);
+			oppenedFrames++;
+			this.tabbedPaneContainer.addTab("Frame: " + oppenedFrames, container);
+			
+			this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
+			this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
 			
 		}catch (Exception e) {
 			
 			System.err.println(e.getMessage());
-			this.textAreaResultConsole.append("\n>");
-			this.textAreaResultConsole.append(e.getMessage());
+			this.writteResultInConsole(hexFrame);
 			
+		}
+		
+	}
+	
+	private void duplicateCurrentFrame() {
+		
+		try {						
+			
+			BinaryTablePixelPanelContainer currentContainer = (BinaryTablePixelPanelContainer) this.tabbedPaneContainer.getSelectedComponent();
+			CellPixelPanel[][] currentPixelPanel = currentContainer.getCellPixelPanels();
+			boolean[][] currentBinaryTable = currentContainer.getBinaryTable();
+			BinaryTablePixelPanelContainer copyContaiener = new BinaryTablePixelPanelContainer(currentPixelPanel, currentBinaryTable);
+			oppenedFrames++;
+			this.tabbedPaneContainer.addTab("Freame: " + oppenedFrames, copyContaiener);
+			
+			this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);			
+			this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
+			
+		}catch (Exception e) {
+			this.writteResultInConsole(e.getMessage());
 		}
 		
 	}
