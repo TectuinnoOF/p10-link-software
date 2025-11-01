@@ -88,7 +88,20 @@ public class BinaryTablePixelPanelContainer extends JPanel {
 	private CellPixelPanel[][] cellsPixelPanels;
 	private String hexFrame;
 	
-	
+	/**
+     * Crea un nuevo contenedor de tabla binaria duplicando el diseño existente
+     * a partir de otro conjunto de celdas y su matriz lógica asociada.
+     * <p>
+     * Este constructor permite clonar un frame ya diseñado, generando una copia
+     * visual y lógica completamente independiente, preservando los estados de
+     * cada píxel (encendido o apagado).
+     * </p>
+     *
+     * @param cellPixelPanels matriz original de celdas {@link CellPixelPanel} a duplicar.
+     * @param binaryTable matriz binaria correspondiente al estado lógico de las celdas.
+     * @see #buildTableFromDuplicate(CellPixelPanel[][], boolean[][])
+     * @since 1.0
+     */
 	public BinaryTablePixelPanelContainer(CellPixelPanel[][] cellPixelPanels, boolean[][] binaryTable) {
 		
 		this.setLayout(new GridLayout(16,32));	
@@ -210,6 +223,21 @@ public class BinaryTablePixelPanelContainer extends JPanel {
 
 	}
 	
+	/**
+     * Construye una nueva cuadrícula de píxeles duplicando el contenido
+     * de otra tabla existente, incluyendo su estado visual y lógico.
+     * <p>
+     * Crea nuevas instancias de {@link CellPixelPanel} basadas en el contenedor
+     * original, copia el estado de cada píxel y asigna los listeners de clic
+     * correspondientes. La estructura resultante es independiente del origen.
+     * </p>
+     *
+     * @param copyContainer matriz original de celdas a replicar.
+     * @param copyBinaryTable matriz lógica de referencia que contiene los estados binarios.
+     * @throws RuntimeException si ocurre un error durante la construcción del duplicado.
+     * @see CellPixelPanel
+     * @since 1.0
+     */
 	private void buildTableFromDuplicate(CellPixelPanel[][] copyContainer, boolean[][] copyBinaryTable) {
 		
 		try {
