@@ -327,6 +327,7 @@ public class BinaryTablePixelPanelContainer extends JPanel {
 		this.hexFrame = FrameConverter.getRamArrayFrame(hexMatrix);
 		
 	}
+		
 	
 	/**
      * Limpia completamente la tabla de píxeles actual, apagando todas las celdas

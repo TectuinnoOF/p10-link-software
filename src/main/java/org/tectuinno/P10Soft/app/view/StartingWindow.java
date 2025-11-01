@@ -52,6 +52,7 @@ import java.awt.Dimension;
 import javax.swing.JSplitPane;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -62,48 +63,55 @@ import javax.swing.SwingConstants;
 import java.awt.Toolkit;
 
 /**
- * Ventana principal del sistema que actúa como punto de entrada visual para el usuario.
+ * Ventana principal del sistema que actúa como punto de entrada visual para el
+ * usuario.
  * <p>
  * La clase {@code StartingWindow} extiende {@link JFrame} y representa la
- * ventana principal de la aplicación. Su propósito es inicializar y mostrar
- * la interfaz base desde la cual el usuario puede acceder al resto de las
+ * ventana principal de la aplicación. Su propósito es inicializar y mostrar la
+ * interfaz base desde la cual el usuario puede acceder al resto de las
  * funcionalidades del sistema.
  * </p>
  *
  * <h2>Características principales</h2>
  * <ul>
- *   <li>Inicializa los componentes gráficos (botones, menús, paneles, etc.).</li>
- *   <li>Establece las propiedades visuales de la ventana (tamaño, título, íconos, comportamiento de cierre, etc.).</li>
- *   <li>Actúa como contenedor principal de otras vistas o paneles secundarios.</li>
- *   <li>Puede incluir listeners para manejar eventos de interacción del usuario.</li>
+ * <li>Inicializa los componentes gráficos (botones, menús, paneles, etc.).</li>
+ * <li>Establece las propiedades visuales de la ventana (tamaño, título, íconos,
+ * comportamiento de cierre, etc.).</li>
+ * <li>Actúa como contenedor principal de otras vistas o paneles
+ * secundarios.</li>
+ * <li>Puede incluir listeners para manejar eventos de interacción del
+ * usuario.</li>
  * </ul>
  *
  *
  * <h2>Ciclo de vida</h2>
  * <table border="1">
- *   <tr>
- *     <th>Etapa</th>
- *     <th>Descripción</th>
- *   </tr>
- *   <tr>
- *     <td>Construcción</td>
- *     <td>Se instancian los componentes de la interfaz y se definen las propiedades básicas.</td>
- *   </tr>
- *   <tr>
- *     <td>Inicialización</td>
- *     <td>Se configuran los listeners y la lógica de los botones o menús.</td>
- *   </tr>
- *   <tr>
- *     <td>Ejecución</td>
- *     <td>La ventana se hace visible al usuario y queda en espera de eventos.</td>
- *   </tr>
+ * <tr>
+ * <th>Etapa</th>
+ * <th>Descripción</th>
+ * </tr>
+ * <tr>
+ * <td>Construcción</td>
+ * <td>Se instancian los componentes de la interfaz y se definen las propiedades
+ * básicas.</td>
+ * </tr>
+ * <tr>
+ * <td>Inicialización</td>
+ * <td>Se configuran los listeners y la lógica de los botones o menús.</td>
+ * </tr>
+ * <tr>
+ * <td>Ejecución</td>
+ * <td>La ventana se hace visible al usuario y queda en espera de eventos.</td>
+ * </tr>
  * </table>
  *
  * <h2>Notas de implementación</h2>
  * <ul>
- *   <li>Se recomienda mantener la lógica de negocio fuera de esta clase, limitándola a control visual.</li>
- *   <li>Usar el patrón MVC para desacoplar vista, modelo y controlador.</li>
- *   <li>Si se requiere cambiar el contenido dinámicamente, usar un {@link javax.swing.JPanel} central con {@link java.awt.CardLayout}.</li>
+ * <li>Se recomienda mantener la lógica de negocio fuera de esta clase,
+ * limitándola a control visual.</li>
+ * <li>Usar el patrón MVC para desacoplar vista, modelo y controlador.</li>
+ * <li>Si se requiere cambiar el contenido dinámicamente, usar un
+ * {@link javax.swing.JPanel} central con {@link java.awt.CardLayout}.</li>
  * </ul>
  *
  * @author Pablo Gomez Perez
@@ -139,7 +147,7 @@ public class StartingWindow extends JFrame {
 	private final JPanel panelResultConsole = new JPanel();
 	private final JScrollPane scrollPaneConsoleContainer = new JScrollPane();
 	private final JTextArea textAreaResultConsole = new JTextArea();
-	private final JTabbedPane tabbedPaneContainer = new JTabbedPane(JTabbedPane.TOP);	
+	private final JTabbedPane tabbedPaneContainer = new JTabbedPane(JTabbedPane.TOP);
 	private final JSeparator separator_1 = new JSeparator();
 	private final JButton btnNuevoFrame = new JButton("Nuevo frame");
 	private final JButton btnCerrarFrame = new JButton("Cerrar frame");
@@ -151,12 +159,22 @@ public class StartingWindow extends JFrame {
 	private final JMenuItem jMenuItemCopiarFrameActual = new JMenuItem("Duplicar actual");
 	private final JButton btnDuplicarFrameActual = new JButton("Duplicar");
 	private static int oppenedFrames = 0;
+	private final JButton btnParar = new JButton("Parar");
+
+	/**
+	 * Usada para determinar si la animación se continua transmitiendo al chip o se
+	 * debe detener
+	 */
+	private boolean isAnimationRunning = true;
+	private List<String> hexFramesList;
+	private SerialTransmitter tx = new SerialTransmitter();
 
 	/**
 	 * Create the frame.
 	 */
-	public StartingWindow() {		
-		setIconImage(Toolkit.getDefaultToolkit().getImage(StartingWindow.class.getResource("/org/tectuinno/P10Soft/app/images/p10-soft-icon.png")));
+	public StartingWindow() {
+		setIconImage(Toolkit.getDefaultToolkit()
+				.getImage(StartingWindow.class.getResource("/org/tectuinno/P10Soft/app/images/p10-soft-icon.png")));
 		setTitle("P10 Link Software");
 		addComponentListener(new ComponentAdapter() {
 			@Override
@@ -165,7 +183,7 @@ public class StartingWindow extends JFrame {
 			}
 		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 900, 700);
+		setBounds(100, 100, 1100, 700);
 		{
 			setJMenuBar(menuBar);
 		}
@@ -294,7 +312,7 @@ public class StartingWindow extends JFrame {
 		}
 		{
 			// If there is any tab open, the button will be off
-			this.btnCerrarFrame.setEnabled(false);				
+			this.btnCerrarFrame.setEnabled(false);
 			btnCerrarFrame.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					closeCurrentTab();
@@ -303,10 +321,29 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(btnCerrarFrame);
 		}
 		{
+			btnNewButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					convertAllFrames();
+				}
+			});
 			jPanelSuperiorBotones.add(btnNewButton);
 		}
 		{
+			btnReproducirFrames.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					sendAllFrames();
+				}
+			});
 			jPanelSuperiorBotones.add(btnReproducirFrames);
+		}
+		{
+			btnParar.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					isAnimationRunning = false;
+					tx.closePort();
+				}
+			});
+			jPanelSuperiorBotones.add(btnParar);
 		}
 		{
 			splitPaneTablaContenedor.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -333,306 +370,451 @@ public class StartingWindow extends JFrame {
 			scrollPaneConsoleContainer.setViewportView(textAreaResultConsole);
 			this.setConsoleInitialText();
 		}
-		
+
 		this.searchForComDevices();
 
 	}
-	
+
 	/**
-     * Ajusta dinámicamente la posición del divisor del componente {@link JSplitPane}
-     * que contiene la tabla principal dentro de la ventana.
-     * <p>
-     * Este método reposiciona el divisor del panel dividido
-     * ({@code splitPaneTablaContenedor}) según la altura actual de la ventana,
-     * garantizando que el área superior conserve una proporción fija y el área
-     * inferior (por ejemplo, una tabla o panel de detalle) mantenga
-     * aproximadamente 310 píxeles de altura.
-     * </p>
-     *
-     * <h2>Propósito</h2>
-     * <ul>
-     *   <li>Evitar que el divisor del {@code JSplitPane} quede desalineado cuando la ventana cambia de tamaño.</li>
-     *   <li>Mantener una distribución visual coherente entre los paneles superior e inferior.</li>
-     *   <li>Adaptar la interfaz a diferentes resoluciones o tamaños de pantalla.</li>
-     * </ul>
-     *
-     * <h2>Funcionamiento</h2>
-     * <p>
-     * La posición del divisor se calcula restando {@code 310} píxeles a la altura total
-     * de la ventana, de forma que la tabla inferior mantenga ese espacio reservado.
-     * </p>
-     *
-     * <h2>Notas</h2>
-     * <ul>
-     *   <li>Debe ser llamado después de que los componentes visuales han sido inicializados.</li>
-     *   <li>En entornos de redimensionamiento dinámico, se recomienda invocarlo dentro de un listener de eventos {@code componentResized}.</li>
-     * </ul>
-     *
-     * @see javax.swing.JSplitPane#setDividerLocation(int)
-     * @since 1.0
-     */
+	 * Ajusta dinámicamente la posición del divisor del componente
+	 * {@link JSplitPane} que contiene la tabla principal dentro de la ventana.
+	 * <p>
+	 * Este método reposiciona el divisor del panel dividido
+	 * ({@code splitPaneTablaContenedor}) según la altura actual de la ventana,
+	 * garantizando que el área superior conserve una proporción fija y el área
+	 * inferior (por ejemplo, una tabla o panel de detalle) mantenga aproximadamente
+	 * 310 píxeles de altura.
+	 * </p>
+	 *
+	 * <h2>Propósito</h2>
+	 * <ul>
+	 * <li>Evitar que el divisor del {@code JSplitPane} quede desalineado cuando la
+	 * ventana cambia de tamaño.</li>
+	 * <li>Mantener una distribución visual coherente entre los paneles superior e
+	 * inferior.</li>
+	 * <li>Adaptar la interfaz a diferentes resoluciones o tamaños de pantalla.</li>
+	 * </ul>
+	 *
+	 * <h2>Funcionamiento</h2>
+	 * <p>
+	 * La posición del divisor se calcula restando {@code 310} píxeles a la altura
+	 * total de la ventana, de forma que la tabla inferior mantenga ese espacio
+	 * reservado.
+	 * </p>
+	 *
+	 * <h2>Notas</h2>
+	 * <ul>
+	 * <li>Debe ser llamado después de que los componentes visuales han sido
+	 * inicializados.</li>
+	 * <li>En entornos de redimensionamiento dinámico, se recomienda invocarlo
+	 * dentro de un listener de eventos {@code componentResized}.</li>
+	 * </ul>
+	 *
+	 * @see javax.swing.JSplitPane#setDividerLocation(int)
+	 * @since 1.0
+	 */
 	private void setTableDividerLocationEvent() {
 		this.splitPaneTablaContenedor.setDividerLocation(this.getHeight() - 310);
 	}
-	
-	
-	
+
 	/**
-     * Devuelve la representación lógica completa de la tabla binaria mostrada
-     * en la interfaz gráfica del editor de píxeles.
-     * <p>
-     * La matriz resultante es de tipo {@code boolean[16][32]} y refleja el
-     * estado actual (encendido/apagado) de cada celda {@link CellPixelPanel}
-     * dentro de la cuadrícula gestionada por {@code panelGridLayOutTablaBinaria}.
-     * Cada posición de la matriz corresponde a la combinación de fila y columna
-     * de una celda en la vista.
-     * </p>
-     *
-     * <h2>Estructura del retorno</h2>
-     * <table border="1" cellpadding="4" cellspacing="0">
-     *   <tr>
-     *     <th>Índice</th>
-     *     <th>Tipo</th>
-     *     <th>Descripción</th>
-     *   </tr>
-     *   <tr>
-     *     <td>{@code [i][j]}</td>
-     *     <td>{@code boolean}</td>
-     *     <td>
-     *       Estado lógico del píxel en la fila <code>i</code> y columna <code>j</code>.<br>
-     *       <ul>
-     *         <li>{@code true} → píxel encendido (celda verde)</li>
-     *         <li>{@code false} → píxel apagado (celda amarilla)</li>
-     *       </ul>
-     *     </td>
-     *   </tr>
-     * </table>
-     *
-     * <h2>Uso típico</h2>
-     * <pre>{@code
-     * // Obtener el estado binario actual de la cuadrícula
-     * boolean[][] estadoActual = getBinaryTable();
-     *
-     * // Acceder al estado de la celda en fila 5, columna 10
-     * boolean pixelEncendido = estadoActual[5][10];
-     * }</pre>
-     *
-     * <h2>Contexto de uso</h2>
-     * Este método se utiliza comúnmente para:
-     * <ul>
-     *   <li>Exportar o serializar el patrón binario diseñado por el usuario.</li>
-     *   <li>Transmitir el estado de la cuadrícula a un microcontrolador Tectuino.</li>
-     *   <li>Actualizar vistas externas o buffers lógicos dentro del IDE.</li>
-     * </ul>
-     *
-     * @return una matriz bidimensional de tipo {@code boolean[16][32]} que representa
-     *         el estado lógico completo de la cuadrícula binaria.
-     * @see CellPixelPanel
-     * @see #buildTable()
-     * @since 1.0
-     */
+	 * Devuelve la representación lógica completa de la tabla binaria mostrada en la
+	 * interfaz gráfica del editor de píxeles.
+	 * <p>
+	 * La matriz resultante es de tipo {@code boolean[16][32]} y refleja el estado
+	 * actual (encendido/apagado) de cada celda {@link CellPixelPanel} dentro de la
+	 * cuadrícula gestionada por {@code panelGridLayOutTablaBinaria}. Cada posición
+	 * de la matriz corresponde a la combinación de fila y columna de una celda en
+	 * la vista.
+	 * </p>
+	 *
+	 * <h2>Estructura del retorno</h2>
+	 * <table border="1" cellpadding="4" cellspacing="0">
+	 * <tr>
+	 * <th>Índice</th>
+	 * <th>Tipo</th>
+	 * <th>Descripción</th>
+	 * </tr>
+	 * <tr>
+	 * <td>{@code [i][j]}</td>
+	 * <td>{@code boolean}</td>
+	 * <td>Estado lógico del píxel en la fila <code>i</code> y columna
+	 * <code>j</code>.<br>
+	 * <ul>
+	 * <li>{@code true} → píxel encendido (celda verde)</li>
+	 * <li>{@code false} → píxel apagado (celda amarilla)</li>
+	 * </ul>
+	 * </td>
+	 * </tr>
+	 * </table>
+	 *
+	 * <h2>Uso típico</h2>
+	 * 
+	 * <pre>{@code
+	 * // Obtener el estado binario actual de la cuadrícula
+	 * boolean[][] estadoActual = getBinaryTable();
+	 *
+	 * // Acceder al estado de la celda en fila 5, columna 10
+	 * boolean pixelEncendido = estadoActual[5][10];
+	 * }</pre>
+	 *
+	 * <h2>Contexto de uso</h2> Este método se utiliza comúnmente para:
+	 * <ul>
+	 * <li>Exportar o serializar el patrón binario diseñado por el usuario.</li>
+	 * <li>Transmitir el estado de la cuadrícula a un microcontrolador
+	 * Tectuino.</li>
+	 * <li>Actualizar vistas externas o buffers lógicos dentro del IDE.</li>
+	 * </ul>
+	 *
+	 * @return una matriz bidimensional de tipo {@code boolean[16][32]} que
+	 *         representa el estado lógico completo de la cuadrícula binaria.
+	 * @see CellPixelPanel
+	 * @see #buildTable()
+	 * @since 1.0
+	 */
 	public boolean[][] getBinaryTable() {
 		return this.binaryTable;
-	}		
-	
+	}
+
 	/**
-     * Convierte el frame binario actualmente activo en la pestaña seleccionada
-     * a su representación hexadecimal, delegando la conversión al contenedor
-     * {@link BinaryTablePixelPanelContainer}.
-     * <p>
-     * Obtiene el componente activo del panel con pestañas, ejecuta su conversión
-     * mediante {@link BinaryTablePixelPanelContainer#convertCurrentFrame()} y
-     * almacena el resultado en {@code hexFrame}. Finalmente, muestra la trama
-     * generada en la consola del IDE.
-     * </p>
-     *
-     * <h2>Flujo resumido</h2>
-     * <ol>
-     *   <li>Obtiene el contenedor actualmente seleccionado.</li>
-     *   <li>Invoca su método {@code convertCurrentFrame()}.</li>
-     *   <li>Recupera el resultado mediante {@code getHexFrame()}.</li>
-     *   <li>Registra los mensajes de proceso y resultado en la consola.</li>
-     * </ol>
-     *
-     * <h2>Gestión de errores</h2>
-     * <ul>
-     *   <li>Captura cualquier excepción y la muestra en la consola del IDE.</li>
-     *   <li>Imprime el error también en la salida de error estándar.</li>
-     * </ul>
-     *
-     * @throws RuntimeException si ocurre un error durante la conversión.
-     * @see BinaryTablePixelPanelContainer#convertCurrentFrame()
-     * @see BinaryTablePixelPanelContainer#getHexFrame()
-     * @since 1.0
-     */
-	private void convertFrame() {				
-		
+	 * Convierte el frame binario actualmente activo en la pestaña seleccionada a su
+	 * representación hexadecimal, delegando la conversión al contenedor
+	 * {@link BinaryTablePixelPanelContainer}.
+	 * <p>
+	 * Obtiene el componente activo del panel con pestañas, ejecuta su conversión
+	 * mediante {@link BinaryTablePixelPanelContainer#convertCurrentFrame()} y
+	 * almacena el resultado en {@code hexFrame}. Finalmente, muestra la trama
+	 * generada en la consola del IDE.
+	 * </p>
+	 *
+	 * <h2>Flujo resumido</h2>
+	 * <ol>
+	 * <li>Obtiene el contenedor actualmente seleccionado.</li>
+	 * <li>Invoca su método {@code convertCurrentFrame()}.</li>
+	 * <li>Recupera el resultado mediante {@code getHexFrame()}.</li>
+	 * <li>Registra los mensajes de proceso y resultado en la consola.</li>
+	 * </ol>
+	 *
+	 * <h2>Gestión de errores</h2>
+	 * <ul>
+	 * <li>Captura cualquier excepción y la muestra en la consola del IDE.</li>
+	 * <li>Imprime el error también en la salida de error estándar.</li>
+	 * </ul>
+	 *
+	 * @throws RuntimeException si ocurre un error durante la conversión.
+	 * @see BinaryTablePixelPanelContainer#convertCurrentFrame()
+	 * @see BinaryTablePixelPanelContainer#getHexFrame()
+	 * @since 1.0
+	 */
+	private void convertFrame() {
+
 		try {
-			
+
 			this.writteResultInConsole("Iniciando decodificación...");
-			//this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
-			
-			BinaryTablePixelPanelContainer currentPixelContainer = (BinaryTablePixelPanelContainer)this.tabbedPaneContainer.getSelectedComponent();
+			// this.hexFrame = FrameConverter.convertToHexString(this.binaryTable);
+
+			BinaryTablePixelPanelContainer currentPixelContainer = (BinaryTablePixelPanelContainer) this.tabbedPaneContainer
+					.getSelectedComponent();
 			currentPixelContainer.convertCurrentFrame();
 			this.hexFrame = currentPixelContainer.getHexFrame();
-			
+
 			this.writteResultInConsole("Trama obtenida");
 			this.writteResultInConsole(hexFrame);
-			
-		}catch (Exception e) {
-			
+
+		} catch (Exception e) {
+
 			this.writteResultInConsole("Ha ocurrido un error: " + e.getMessage());
 			e.printStackTrace(System.err);
-			
+
 		}
-		
+
 	}
-	
+
+	public List<BinaryTablePixelPanelContainer> getAllPixelPanelContainers() {
+
+		List<BinaryTablePixelPanelContainer> containersList = new ArrayList<>();
+		int totalTabs = this.tabbedPaneContainer.getTabCount();
+
+		for (int i = 0; i < totalTabs; i++) {
+			containersList.add((BinaryTablePixelPanelContainer) this.tabbedPaneContainer.getComponentAt(i));
+		}
+
+		return containersList;
+
+	}
+
+	private void convertAllFrames() {
+
+		List<BinaryTablePixelPanelContainer> containersList = this.getAllPixelPanelContainers();
+		List<String> hexFramesList = new ArrayList<>();
+
+		this.writteResultInConsole("Iniciando serialización...");
+
+		try {
+
+			for (BinaryTablePixelPanelContainer container : containersList) {
+
+				System.out.println(container.getHexFrame());
+				container.convertCurrentFrame();
+				hexFramesList.add(container.getHexFrame());
+				this.writteResultInConsole("Frame: " + container.getHexFrame());
+
+			}
+
+			this.hexFramesList = hexFramesList;
+
+			this.writteResultInConsole("Serialización terminada...");
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+			this.writteResultInConsole("Error durante serialización: " + e.getMessage());
+
+		}
+
+	}
+
 	/**
-     * Limpia todos los píxeles del frame actualmente activo en la pestaña seleccionada.
-     * <p>
-     * Obtiene el componente {@link BinaryTablePixelPanelContainer} activo dentro
-     * del panel con pestañas y ejecuta su método {@link BinaryTablePixelPanelContainer#clearCurrentPixelTable()},
-     * restableciendo tanto la vista como la matriz lógica del frame.
-     * </p>
-     *
-     * @see BinaryTablePixelPanelContainer#clearCurrentPixelTable()
-     * @since 1.0
-     */
+	 * Limpia todos los píxeles del frame actualmente activo en la pestaña
+	 * seleccionada.
+	 * <p>
+	 * Obtiene el componente {@link BinaryTablePixelPanelContainer} activo dentro
+	 * del panel con pestañas y ejecuta su método
+	 * {@link BinaryTablePixelPanelContainer#clearCurrentPixelTable()},
+	 * restableciendo tanto la vista como la matriz lógica del frame.
+	 * </p>
+	 *
+	 * @see BinaryTablePixelPanelContainer#clearCurrentPixelTable()
+	 * @since 1.0
+	 */
 	private void clearAllPixels() {
-		
-		BinaryTablePixelPanelContainer currentBinaryTablePixelPanelContainer = (BinaryTablePixelPanelContainer)this.tabbedPaneContainer.getSelectedComponent();
+
+		BinaryTablePixelPanelContainer currentBinaryTablePixelPanelContainer = (BinaryTablePixelPanelContainer) this.tabbedPaneContainer
+				.getSelectedComponent();
 		currentBinaryTablePixelPanelContainer.clearCurrentPixelTable();
-		
+
 	}
-	
+
 	private void setConsoleInitialText() {
-		
+
 		StringBuilder sb = new StringBuilder();
-		
+
 		sb.append("==========================================================\n");
 		sb.append("                 Result Console Terminal                 \n");
 		sb.append("==========================================================\n");
-		
+
 		this.textAreaResultConsole.setText(sb.toString());
-		
+
 	}
-	
+
 	private void writteResultInConsole(String msg) {
 		this.textAreaResultConsole.append("\n>>");
 		this.textAreaResultConsole.append(msg);
 	}
-	
+
 	private void searchForComDevices() {
 		this.cmbDispositivosCOMDisponibles.removeAllItems();
 		this.aviablePortsName = SerialTransmitter.listAviablePorts();
-		
-		if(aviablePortsName.size() <= 0) {
+
+		if (aviablePortsName.size() <= 0) {
 			this.writteResultInConsole("No se detectaron dispositivos conectados...");
 			return;
 		}
-		
-		for(String s : aviablePortsName) {
+
+		for (String s : aviablePortsName) {
 			this.cmbDispositivosCOMDisponibles.addItem(s);
-		}				
+		}
 	}
-	
+
 	private void sendData() {
-		
-		if(this.aviablePortsName == null || this.aviablePortsName.size() < 0) {
+
+		if (this.aviablePortsName == null || this.aviablePortsName.size() < 0) {
 			this.writteResultInConsole("No se detectaron dispositivos conectados");
 			return;
 		}
-		
-		if(this.hexFrame == null || this.hexFrame.length() < 128) {
+
+		if (this.hexFrame == null || this.hexFrame.length() < 128) {
 			this.writteResultInConsole("Los datos son Null o incompletos");
 			return;
 		}
-		
+
 		SerialTransmitter tx = new SerialTransmitter();
-		if(tx.openPort(this.cmbDispositivosCOMDisponibles.getSelectedItem().toString())) {
+		if (tx.openPort(this.cmbDispositivosCOMDisponibles.getSelectedItem().toString())) {
 			this.writteResultInConsole("Puerto abierto: " + this.cmbDispositivosCOMDisponibles.getSelectedItem());
 			boolean success = tx.sendHexFrame(this.hexFrame);
 			this.writteResultInConsole("Envio: " + (success ? "OK" : "Fallido"));
 			tx.closePort();
 		}
-		
+
 	}
-	
+
+	private void sendAllFrames() {
+
+		if (this.aviablePortsName == null || this.aviablePortsName.size() < 0) {
+			this.writteResultInConsole("No se detectaron dispositivos conectados");
+			return;
+		}
+
+		if (this.hexFramesList == null || this.hexFramesList.isEmpty()) {
+			this.writteResultInConsole("Los datos son Null o incompletos");
+			return;
+		}
+
+		this.isAnimationRunning = true;
+
+		
+
+		if (!tx.openPort(this.cmbDispositivosCOMDisponibles.getSelectedItem().toString())) {
+			return;
+		}
+
+		writteResultInConsole("Puerto abierto: " + cmbDispositivosCOMDisponibles.getSelectedItem());
+
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+
+					int i = 0;
+
+					while (isAnimationRunning) {
+
+						boolean success = tx.sendHexFrame(hexFramesList.get(i));
+						writteResultInConsole("Envio: " + (success ? "OK" : "Fallido"));
+						Thread.sleep(500);
+
+						if (i == hexFramesList.size() - 1) {
+							i = 0;
+						} else {
+							i++;
+						}
+					}
+
+				} catch (Exception e) {
+
+					Thread.currentThread().interrupt();
+					e.printStackTrace();
+					tx.closePort();
+
+				}
+
+			}
+		}).start();
+
+		if(!this.isAnimationRunning) {
+			tx.closePort();
+		}
+
+	}
+
 	/**
-     * Cierra la pestaña actualmente seleccionada en el contenedor de frames,
-     * previa confirmación del usuario.
-     * <p>
-     * Si el usuario elige "No", la operación se cancela y el diseño permanece abierto.
-     * </p>
-     *
-     * @see javax.swing.JTabbedPane#remove(int)
-     * @since 1.0
-     */
+	 * Cierra la pestaña actualmente seleccionada en el contenedor de frames, previa
+	 * confirmación del usuario.
+	 * <p>
+	 * Si el usuario elige "No", la operación se cancela y el diseño permanece
+	 * abierto.
+	 * </p>
+	 *
+	 * @see javax.swing.JTabbedPane#remove(int)
+	 * @since 1.0
+	 */
 	private void closeCurrentTab() {
-		
-		int result = JOptionPane.showConfirmDialog(this, "Estas seguro de cerrar el frame? el diseño se perderá.", "Cerrar frame?", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);		
-		if(result == JOptionPane.NO_OPTION) return;
+
+		int result = JOptionPane.showConfirmDialog(this, "Estas seguro de cerrar el frame? el diseño se perderá.",
+				"Cerrar frame?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		if (result == JOptionPane.NO_OPTION)
+			return;
 		oppenedFrames--;
-		
+
 		this.tabbedPaneContainer.remove(this.tabbedPaneContainer.getSelectedIndex());
-		
+
 		this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
 		this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
-		
+
 	}
-	
+
 	/**
-     * Crea y agrega una nueva pestaña con una tabla binaria de píxeles vacía
-     * al contenedor principal de la interfaz.
-     * <p>
-     * Cada pestaña corresponde a una instancia independiente de
-     * {@link BinaryTablePixelPanelContainer}, que permite al usuario
-     * diseñar un nuevo frame o patrón gráfico.
-     * </p>
-     *
-     * @throws RuntimeException si ocurre un error al crear o agregar el contenedor.
-     * @see BinaryTablePixelPanelContainer
-     * @since 1.0
-     */
+	 * Crea y agrega una nueva pestaña con una tabla binaria de píxeles vacía al
+	 * contenedor principal de la interfaz.
+	 * <p>
+	 * Cada pestaña corresponde a una instancia independiente de
+	 * {@link BinaryTablePixelPanelContainer}, que permite al usuario diseñar un
+	 * nuevo frame o patrón gráfico.
+	 * </p>
+	 *
+	 * @throws RuntimeException si ocurre un error al crear o agregar el contenedor.
+	 * @see BinaryTablePixelPanelContainer
+	 * @since 1.0
+	 */
 	private void openNewBinaryPixelTable() {
-		
-		try {						
-			
+
+		try {
+
 			BinaryTablePixelPanelContainer container = new BinaryTablePixelPanelContainer();
 			oppenedFrames++;
 			this.tabbedPaneContainer.addTab("Frame: " + oppenedFrames, container);
-			
+
 			this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
 			this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
-			
-		}catch (Exception e) {
-			
+
+		} catch (Exception e) {
+
 			System.err.println(e.getMessage());
 			this.writteResultInConsole(hexFrame);
-			
+
 		}
-		
+
 	}
-	
+
+	/**
+	 * Duplica el frame actualmente activo creando una nueva pestaña con una copia
+	 * exacta del diseño y del estado lógico de sus píxeles.
+	 * <p>
+	 * Obtiene el contenedor activo ({@link BinaryTablePixelPanelContainer}), extrae
+	 * sus celdas y su matriz binaria, y crea una nueva instancia duplicada mediante
+	 * el constructor de copia. La nueva pestaña se agrega al panel principal
+	 * manteniendo la numeración de frames.
+	 * </p>
+	 *
+	 * <h2>Flujo resumido</h2>
+	 * <ol>
+	 * <li>Obtiene el contenedor actualmente seleccionado.</li>
+	 * <li>Extrae su matriz de celdas y su tabla binaria.</li>
+	 * <li>Crea una copia con
+	 * {@link BinaryTablePixelPanelContainer#BinaryTablePixelPanelContainer(CellPixelPanel[][], boolean[][])}.</li>
+	 * <li>Agrega la copia como una nueva pestaña en el
+	 * {@code tabbedPaneContainer}.</li>
+	 * <li>Actualiza el estado de los botones relacionados con la gestión de
+	 * pestañas.</li>
+	 * </ol>
+	 *
+	 * @see BinaryTablePixelPanelContainer
+	 * @see BinaryTablePixelPanelContainer#BinaryTablePixelPanelContainer(CellPixelPanel[][],
+	 *      boolean[][])
+	 * @since 1.0
+	 */
 	private void duplicateCurrentFrame() {
-		
-		try {						
-			
-			BinaryTablePixelPanelContainer currentContainer = (BinaryTablePixelPanelContainer) this.tabbedPaneContainer.getSelectedComponent();
+
+		try {
+
+			BinaryTablePixelPanelContainer currentContainer = (BinaryTablePixelPanelContainer) this.tabbedPaneContainer
+					.getSelectedComponent();
 			CellPixelPanel[][] currentPixelPanel = currentContainer.getCellPixelPanels();
 			boolean[][] currentBinaryTable = currentContainer.getBinaryTable();
-			BinaryTablePixelPanelContainer copyContaiener = new BinaryTablePixelPanelContainer(currentPixelPanel, currentBinaryTable);
+			BinaryTablePixelPanelContainer copyContaiener = new BinaryTablePixelPanelContainer(currentPixelPanel,
+					currentBinaryTable);
 			oppenedFrames++;
 			this.tabbedPaneContainer.addTab("Freame: " + oppenedFrames, copyContaiener);
-			
-			this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);			
+
+			this.btnCerrarFrame.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
 			this.btnDuplicarFrameActual.setEnabled(this.tabbedPaneContainer.getTabCount() > 0);
-			
-		}catch (Exception e) {
+
+		} catch (Exception e) {
 			this.writteResultInConsole(e.getMessage());
 		}
-		
+
 	}
 
 }
