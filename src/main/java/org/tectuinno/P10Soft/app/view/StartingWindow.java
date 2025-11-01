@@ -37,6 +37,7 @@ import javax.swing.border.LineBorder;
 
 import org.tectuinno.P10Soft.app.core.FrameConverter;
 import org.tectuinno.P10Soft.app.io.SerialTransmitter;
+import org.tectuinno.P10Soft.app.view.components.BinaryTablePixelPanelContainer;
 import org.tectuinno.P10Soft.app.view.components.CellPixelPanel;
 
 import java.awt.BorderLayout;
@@ -65,6 +66,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
+import java.awt.Toolkit;
 
 /**
  * Ventana principal del sistema que actúa como punto de entrada visual para el usuario.
@@ -134,10 +138,9 @@ public class StartingWindow extends JFrame {
 	private final JButton btnEnviar = new JButton("Enviar");
 	private final JMenuItem jMenuItemEscanear = new JMenuItem("Escanear COM");
 	private final JComboBox<String> cmbDispositivosCOMDisponibles = new JComboBox<String>();
-	private final JButton btnEscanear = new JButton("Escanear dispositivos");
+	private final JButton btnEscanear = new JButton("Escanear");
 	private final JSplitPane splitPaneTablaContenedor = new JSplitPane();
 	private final JPanel panelContenedorTablaBinaria = new JPanel();
-	private final JPanel panelGridLayOutTablaBinaria = new JPanel();
 	private boolean[][] binaryTable = new boolean[16][32];
 	private CellPixelPanel[][] cellsPixelPanels = new CellPixelPanel[16][32];
 	private String hexFrame;
@@ -145,11 +148,24 @@ public class StartingWindow extends JFrame {
 	private final JPanel panelResultConsole = new JPanel();
 	private final JScrollPane scrollPaneConsoleContainer = new JScrollPane();
 	private final JTextArea textAreaResultConsole = new JTextArea();
+	private final JTabbedPane tabbedPaneContainer = new JTabbedPane(JTabbedPane.TOP);	
+	private final JSeparator separator_1 = new JSeparator();
+	private final JButton btnNuevoFrame = new JButton("Nuevo frame");
+	private final JButton btnCerrarFrame = new JButton("Cerrar frame");
+	private final JButton btnNewButton = new JButton("Serializar");
+	private final JButton btnReproducirFrames = new JButton("Reproducir");
+	private final JMenu jMenuFrame = new JMenu("Frame");
+	private final JMenuItem jMenuItemItemNuevoFrame = new JMenuItem("Nuevo Frame");
+	private final JMenuItem jMenuItemCerrarFrame = new JMenuItem("Cerrar Frame");
+	private final JMenuItem jMenuItemCopiarFrameActual = new JMenuItem("Duplicar actual");
+	private final JButton btnDuplicarFrameActual = new JButton("Duplicar");
+	private static int oppenedFrames = 0;
 
 	/**
 	 * Create the frame.
 	 */
-	public StartingWindow() {
+	public StartingWindow() {		
+		setIconImage(Toolkit.getDefaultToolkit().getImage(StartingWindow.class.getResource("/org/tectuinno/P10Soft/app/images/p10-soft-icon.png")));
 		setTitle("P10 Link Software");
 		addComponentListener(new ComponentAdapter() {
 			@Override
@@ -197,6 +213,28 @@ public class StartingWindow extends JFrame {
 			});
 			jMenuHerramientas.add(jMenuItemLimpiar);
 		}
+		{
+			menuBar.add(jMenuFrame);
+		}
+		{
+			jMenuItemItemNuevoFrame.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					openNewBinaryPixelTable();
+				}
+			});
+			jMenuFrame.add(jMenuItemItemNuevoFrame);
+		}
+		{
+			jMenuItemCerrarFrame.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					closeCurrentTab();
+				}
+			});
+			jMenuFrame.add(jMenuItemCerrarFrame);
+		}
+		{
+			jMenuFrame.add(jMenuItemCopiarFrameActual);
+		}
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -236,6 +274,37 @@ public class StartingWindow extends JFrame {
 			jPanelSuperiorBotones.add(btnEscanear);
 		}
 		{
+			separator_1.setBackground(new Color(0, 0, 0));
+			separator_1.setForeground(new Color(0, 0, 0));
+			separator_1.setOrientation(SwingConstants.VERTICAL);
+			jPanelSuperiorBotones.add(separator_1);
+		}
+		{
+			btnNuevoFrame.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					openNewBinaryPixelTable();
+				}
+			});
+			jPanelSuperiorBotones.add(btnNuevoFrame);
+		}
+		{
+			jPanelSuperiorBotones.add(btnDuplicarFrameActual);
+		}
+		{
+			btnCerrarFrame.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					closeCurrentTab();
+				}
+			});
+			jPanelSuperiorBotones.add(btnCerrarFrame);
+		}
+		{
+			jPanelSuperiorBotones.add(btnNewButton);
+		}
+		{
+			jPanelSuperiorBotones.add(btnReproducirFrames);
+		}
+		{
 			splitPaneTablaContenedor.setOrientation(JSplitPane.VERTICAL_SPLIT);
 			this.splitPaneTablaContenedor.setDividerLocation(410);
 			contentPane.add(splitPaneTablaContenedor, BorderLayout.CENTER);
@@ -245,9 +314,8 @@ public class StartingWindow extends JFrame {
 		}
 		panelContenedorTablaBinaria.setLayout(new BorderLayout(0, 0));
 		{
-			panelContenedorTablaBinaria.add(panelGridLayOutTablaBinaria, BorderLayout.CENTER);
+			panelContenedorTablaBinaria.add(tabbedPaneContainer, BorderLayout.CENTER);
 		}
-		panelGridLayOutTablaBinaria.setLayout(new GridLayout(16, 32, 0, 0));
 		{
 			splitPaneTablaContenedor.setRightComponent(panelResultConsole);
 		}
@@ -261,8 +329,7 @@ public class StartingWindow extends JFrame {
 			scrollPaneConsoleContainer.setViewportView(textAreaResultConsole);
 			this.setConsoleInitialText();
 		}
-
-		this.buildTable();
+		
 		this.searchForComDevices();
 
 	}
@@ -304,105 +371,7 @@ public class StartingWindow extends JFrame {
 		this.splitPaneTablaContenedor.setDividerLocation(this.getHeight() - 310);
 	}
 	
-	/**
-     * Construye dinámicamente la tabla de celdas binarias representada visualmente
-     * en la interfaz de usuario, inicializando la matriz de paneles que conforman
-     * la cuadrícula principal.
-     * <p>
-     * Este método crea una cuadrícula de 16 filas por 32 columnas, donde cada celda
-     * es un componente {@link CellPixelPanel} que simula un píxel encendido o apagado.
-     * Además, asigna listeners de clic a cada celda para permitir la interacción
-     * directa del usuario y mantener sincronizado el modelo lógico
-     * ({@code binaryTable}) con la vista ({@code panelGridLayOutTablaBinaria}).
-     * </p>
-     *
-     * <h2>Flujo de ejecución</h2>
-     * <ol>
-     *   <li>Verifica que {@code panelGridLayOutTablaBinaria} no sea {@code null}.</li>
-     *   <li>Itera sobre las 16 filas y 32 columnas de la cuadrícula.</li>
-     *   <li>Para cada posición:
-     *     <ul>
-     *       <li>Se instancia un nuevo {@link CellPixelPanel} identificado como <code>panel_i_j</code>.</li>
-     *       <li>Se define un borde negro mediante {@link LineBorder}.</li>
-     *       <li>Se inicializa el estado del píxel como apagado (<code>false</code>).</li>
-     *       <li>Se agrega un {@link MouseListener} que invoca {@link #cellClickedEvent(CellPixelPanel)} al hacer clic.</li>
-     *       <li>El panel es añadido al contenedor principal {@code panelGridLayOutTablaBinaria}.</li>
-     *       <li>Se actualizan las matrices lógicas {@code binaryTable} y {@code cellsPixelPanels}.</li>
-     *     </ul>
-     *   </li>
-     * </ol>
-     *
-     * <h2>Estructuras actualizadas</h2>
-     * <table border="1" cellpadding="4" cellspacing="0">
-     *   <tr>
-     *     <th>Variable</th>
-     *     <th>Tipo</th>
-     *     <th>Descripción</th>
-     *   </tr>
-     *   <tr>
-     *     <td>{@code binaryTable}</td>
-     *     <td>{@code boolean[16][32]}</td>
-     *     <td>Almacena el estado lógico (encendido/apagado) de cada píxel de la cuadrícula.</td>
-     *   </tr>
-     *   <tr>
-     *     <td>{@code cellsPixelPanels}</td>
-     *     <td>{@code CellPixelPanel[16][32]}</td>
-     *     <td>Contiene las referencias visuales de cada celda de la tabla.</td>
-     *   </tr>
-     * </table>
-     *
-     * <h2>Gestión de errores</h2>
-     * <ul>
-     *   <li>Si {@code panelGridLayOutTablaBinaria} es {@code null}, se lanza una excepción y se muestra un cuadro de diálogo con el mensaje de error.</li>
-     *   <li>El error también se imprime en la salida estándar mediante {@code e.printStackTrace()}.</li>
-     * </ul>
-     *
-     * <h2>Ejemplo de uso</h2>
-     * <pre>{@code
-     * // Inicializar la cuadrícula binaria en la ventana principal
-     * buildTable();
-     * }</pre>
-     *
-     * @throws RuntimeException si el contenedor de la tabla binaria no está inicializado.
-     * @see CellPixelPanel
-     * @see #cellClickedEvent(CellPixelPanel)
-     * @since 1.0
-     */
-	private void buildTable() {
-
-		try {			
-			if (this.panelGridLayOutTablaBinaria == null)
-				throw new Exception("El componente es null");
-
-			for (int i = 0; i < 16; i++) {
-				for (int j = 0; j < 32; j++) {
-					CellPixelPanel cellPanel = new CellPixelPanel("panel_" + i + "_" + j, new LineBorder(new Color(0, 0, 0)),j,i);
-					cellPanel.setOn(false);
-					cellPanel.addMouseListener(new MouseAdapter() {
-						@Override
-						public void mouseClicked(MouseEvent e) { 
-							super.mouseClicked(e);
-							cellClickedEvent(cellPanel);
-						}
-					});
-					this.panelGridLayOutTablaBinaria.add(cellPanel);
-					
-					
-					this.binaryTable[i][j] = cellPanel.isPixelOn() ? true : false;
-					this.cellsPixelPanels[i][j] = cellPanel;
-					// jpanelList.add(cellPanel);
-				}
-			}
-
-		} catch (Exception e) {
-
-			JOptionPane.showMessageDialog(this, "Ha ocurrido un error:" + e.getMessage(), "Error de UI",
-					JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-
-		}
-
-	}
+	
 	
 	/**
      * Devuelve la representación lógica completa de la tabla binaria mostrada
@@ -461,21 +430,6 @@ public class StartingWindow extends JFrame {
 	public boolean[][] getBinaryTable() {
 		return this.binaryTable;
 	}		
-
-	private void cellClickedEvent(CellPixelPanel panel) {
-		
-		panel.setOn(!panel.isPixelOn());
-		
-		if(panel.isPixelOn()) {		
-			this.binaryTable[panel.getRow()][panel.getColumn()] = true;
-			return;
-		}
-		
-		if(!panel.isPixelOn()) {			
-			this.binaryTable[panel.getRow()][panel.getColumn()] = false;
-			return;
-		}
-	}
 	
 	/**
      * Convierte la matriz binaria actual representada por {@code binaryTable}
@@ -646,6 +600,55 @@ public class StartingWindow extends JFrame {
 			boolean success = tx.sendHexFrame(this.hexFrame);
 			this.writteResultInConsole("Envio: " + (success ? "OK" : "Fallido"));
 			tx.closePort();
+		}
+		
+	}
+	
+	/**
+     * Cierra la pestaña actualmente seleccionada en el contenedor de frames,
+     * previa confirmación del usuario.
+     * <p>
+     * Si el usuario elige "No", la operación se cancela y el diseño permanece abierto.
+     * </p>
+     *
+     * @see javax.swing.JTabbedPane#remove(int)
+     * @since 1.0
+     */
+	private void closeCurrentTab() {
+		
+		int result = JOptionPane.showConfirmDialog(this, "Estas seguro de cerrar el frame? el diseño se perderá.", "Cerrar frame?", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);		
+		if(result == JOptionPane.NO_OPTION) return;
+		
+		this.tabbedPaneContainer.remove(this.tabbedPaneContainer.getSelectedIndex());
+		
+	}
+	
+	/**
+     * Crea y agrega una nueva pestaña con una tabla binaria de píxeles vacía
+     * al contenedor principal de la interfaz.
+     * <p>
+     * Cada pestaña corresponde a una instancia independiente de
+     * {@link BinaryTablePixelPanelContainer}, que permite al usuario
+     * diseñar un nuevo frame o patrón gráfico.
+     * </p>
+     *
+     * @throws RuntimeException si ocurre un error al crear o agregar el contenedor.
+     * @see BinaryTablePixelPanelContainer
+     * @since 1.0
+     */
+	private void openNewBinaryPixelTable() {
+		
+		try {
+			
+			BinaryTablePixelPanelContainer container = new BinaryTablePixelPanelContainer();
+			this.tabbedPaneContainer.addTab("Frame: " + oppenedFrames + 1, container);
+			
+		}catch (Exception e) {
+			
+			System.err.println(e.getMessage());
+			this.textAreaResultConsole.append("\n>");
+			this.textAreaResultConsole.append(e.getMessage());
+			
 		}
 		
 	}
